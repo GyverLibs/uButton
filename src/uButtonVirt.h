@@ -381,9 +381,9 @@ class uButtonVirt {
     uint16_t _tmr = 0;
     uint8_t _deb = 0;
     uint8_t _press : 1;
+    uint8_t _steps : 7;
     State _state : 4;
     uint8_t _clicks : 4;
-    uint8_t _steps : 7;
 
     uint16_t _getTime() {
         return uint16_t(millis()) - _tmr;
