@@ -1,0 +1,34 @@
+#######################################
+# Syntax Coloring Map For uButton
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+uButton	KEYWORD1
+uButtonVirt	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+Idle	LITERAL1
+Press	LITERAL1
+Click	LITERAL1
+WaitHold	LITERAL1
+Hold	LITERAL1
+ReleaseHold	LITERAL1
+WaitStep	LITERAL1
+Step	LITERAL1
+WaitNextStep	LITERAL1
+ReleaseStep	LITERAL1
+Release	LITERAL1
+WaitClicks	LITERAL1
+Clicks	LITERAL1
+WaitTimeout	LITERAL1
+Timeout	LITERAL1

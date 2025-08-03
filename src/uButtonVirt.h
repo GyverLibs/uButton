@@ -45,9 +45,9 @@ class uButtonVirt {
         Timeout,       // таймаут [событие]
     };
 
-    uButtonVirt() : _state(State::Idle), _clicks(0), _steps(0) {}
+    uButtonVirt() : _press(0), _steps(0), _state(State::Idle), _clicks(0) {}
 
-    // сбросить системные флаги (принудительно закончить обработку)
+    // сбросить состояние (принудительно закончить обработку)
     void reset() {
         _state = State::Idle;
         _clicks = 0;
@@ -130,6 +130,8 @@ class uButtonVirt {
     bool timeout() {
         return _state == State::Timeout;
     }
+
+    // вышел таймаут после взаимодействия с кнопкой, но меньше чем системный UB_TOUT_TIME
     bool timeout(uint16_t ms) {
         if (_state == State::WaitTimeout && _getTime() >= ms) {
             _state = State::Idle;

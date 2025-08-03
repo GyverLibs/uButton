@@ -9,8 +9,14 @@ class uButton : public uButtonVirt {
         pinMode(pin, mode);
     }
 
+    // вызывать в loop. Вернёт true при смене состояния
     bool tick() {
-        return uButtonVirt::pollDebounce(!gio::read(_pin));
+        return uButtonVirt::pollDebounce(readButton());
+    }
+
+    // прочитать состояние кнопки
+    bool readButton() {
+        return !gio::read(_pin);
     }
 
    private:
