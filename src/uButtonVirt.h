@@ -21,9 +21,9 @@
 #define UB_CLICK_TIME 500  // ожидание кликов
 #endif
 
-#ifndef UB_TOUT_TIME
-#define UB_TOUT_TIME 1000  // таймаут события "таймаут"
-#endif
+// #ifndef UB_TOUT_TIME
+// #define UB_TOUT_TIME 3000  // таймаут события "таймаут"
+// #endif
 
 class uButtonVirt {
    public:
@@ -43,15 +43,21 @@ class uButtonVirt {
         Clicks,        // клики [событие]
         WaitTimeout,   // ожидание таймаута [состояние]
         Timeout,       // таймаут [событие]
+        SkipEvents,    // пропускает события [событие]
     };
 
-    uButtonVirt() : _press(0), _steps(0), _state(State::Idle), _clicks(0) {}
+    uButtonVirt() : _press(0), _steps(0), _clicks(0), _state(State::Idle) {}
 
     // сбросить состояние (принудительно закончить обработку)
     void reset() {
         _state = State::Idle;
         _clicks = 0;
         _steps = 0;
+    }
+
+    // игнорировать все события до отпускания кнопки
+    void skipEvents() {
+        if (pressing()) _state = State::SkipEvents;
     }
 
     // кнопка нажата [событие]
@@ -126,15 +132,15 @@ class uButtonVirt {
         return hasClicks() && _clicks == clicks;
     }
 
-    // после взаимодействия с кнопкой, мс [событие]
+    // вышел таймаут [событие]
     bool timeout() {
         return _state == State::Timeout;
     }
 
-    // вышел таймаут после взаимодействия с кнопкой, но меньше чем системный UB_TOUT_TIME
+    // вышел таймаут после взаимодействия с кнопкой
     bool timeout(uint16_t ms) {
         if (_state == State::WaitTimeout && _getTime() >= ms) {
-            _state = State::Idle;
+            _state = State::Timeout;
             return true;
         }
         return false;
@@ -149,6 +155,7 @@ class uButtonVirt {
             case State::WaitStep:
             case State::Step:
             case State::WaitNextStep:
+            case State::SkipEvents:
                 return true;
 
             default:
@@ -279,18 +286,18 @@ class uButtonVirt {
     }
 
     // обработка с антидребезгом. Вернёт true при смене состояния
-    bool pollDebounce(bool pressed) {
+    bool poll(bool pressed) {
         if (_press == pressed) {
             _deb = 0;
         } else {
             if (!_deb) _deb = millis();
             else if (uint8_t(uint8_t(millis()) - _deb) >= UB_DEB_TIME) _press = pressed;
         }
-        return poll(_press);
+        return pollRaw(_press);
     }
 
     // обработка. Вернёт true при смене состояния
-    bool poll(bool pressed) {
+    bool pollRaw(bool pressed) {
         State pstate = _state;
 
         switch (_state) {
@@ -338,10 +345,15 @@ class uButtonVirt {
                 }
                 break;
 
+            case State::SkipEvents:
+                if (!pressed) _state = State::Release;
+                break;
+
             case State::ReleaseHold:
             case State::ReleaseStep:
+                _state = State::Release;
                 _clicks = 0;
-                // fall
+                break;
 
             case State::Click:
                 _state = State::Release;
@@ -368,7 +380,7 @@ class uButtonVirt {
 
             case State::WaitTimeout:
                 if (pressed) _state = State::Press;
-                else if (_getTime() >= UB_TOUT_TIME) _state = State::Timeout;
+                // else if (_getTime() >= UB_TOUT_TIME) _state = State::Timeout;
                 break;
 
             case State::Timeout:
@@ -379,13 +391,22 @@ class uButtonVirt {
         return pstate != _state;
     }
 
-   private:
+   protected:
+    void skipToTimeout() {
+        _resetTime();
+        _state = State::WaitTimeout;
+    }
+    void skipToRelease() {
+        _state = State::SkipEvents;
+    }
+
+   protected:
     uint16_t _tmr = 0;
     uint8_t _deb = 0;
     uint8_t _press : 1;
     uint8_t _steps : 7;
-    State _state : 4;
     uint8_t _clicks : 4;
+    State _state : 4;
 
     uint16_t _getTime() {
         return uint16_t(millis()) - _tmr;

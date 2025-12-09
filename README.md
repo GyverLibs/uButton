@@ -35,7 +35,6 @@
 #define UB_STEP_TIME 400    // время до перехода в состояние "импульсное удержание"
 #define UB_STEP_PRD 200     // период импульсов
 #define UB_CLICK_TIME 500   // ожидание кликов
-#define UB_TOUT_TIME 1000   // таймаут события "таймаут"
 ```
 
 ### Классы
@@ -105,13 +104,10 @@ bool release(uint8_t clicks);
 bool hasClicks();
 bool hasClicks(uint8_t clicks);
 
-// после взаимодействия с кнопкой, мс [событие]
-bool timeout();
+// вышел таймаут после взаимодействия [событие]
+bool timeout(uint16_t ms);
 
 // =============== СОСТОЯНИЯ ===============
-
-// вышел таймаут после взаимодействия с кнопкой, но меньше чем системный UB_TOUT_TIME
-bool timeout(uint16_t ms);
 
 // кнопка зажата (между press() и release()) [состояние]
 bool pressing();
@@ -165,14 +161,14 @@ uint8_t getSteps();
 void pressISR();
 
 // обработка с антидребезгом. Вернёт true при смене состояния
-bool pollDebounce(bool pressed);
+bool poll(bool pressed);
 
 // обработка. Вернёт true при смене состояния
-bool poll(bool pressed);
+bool pollRaw(bool pressed);
 ```
 
 #### uButton
-Ккласс `uButton` наследует `uButtonVirt`, автоматически инициализируя пин и отправляя данные с него в `pollDebounce` внутри `tick`.
+Класс `uButton` наследует `uButtonVirt`, автоматически инициализируя пин и отправляя данные с него в `poll` внутри `tick`.
 
 ```cpp
 // кнопка подключается на GND (open drain)
@@ -181,11 +177,22 @@ uButton(uint8_t pin, uint8_t mode = INPUT_PULLUP);
 // вызывать в loop. Вернёт true при смене состояния
 bool tick();
 
+// опрос без дебаунса, вызывать в loop. Вернёт true при смене состояния
+bool tickRaw();
+
 // прочитать состояние кнопки
 bool readButton();
 ```
 
+#### uButtonMulti
+Обработка нажатия двух кнопок `uButton` как третьей кнопки.
+
+```cpp
+bool tick(uButton& b0, uButton& b1);
+```
+
 ## Примеры
+### Демо
 ```cpp
 #include <uButton.h>
 
@@ -206,12 +213,44 @@ void loop() {
         if (b.releaseStep()) Serial.println("releaseStep");
         if (b.release()) Serial.println("Release");
         if (b.hasClicks()) Serial.print("Clicks: "), Serial.println(b.getClicks());
-        if (b.timeout()) Serial.println("Timeout");
+        if (b.timeout(2000)) Serial.println("Timeout");
 
         switch (b.getState()) {
             // ...
         }
     }
+}
+```
+
+### Две кнопки
+```cpp
+#include <uButtonMulti.h>
+
+uButton b0(5);
+uButton b1(6);
+uButtonMulti b2;
+
+void setup() {
+    Serial.begin(115200);
+}
+
+void loop() {
+    // опрос отдельных кнопок
+    b0.tick();
+    b1.tick();
+
+    // опрос одновременного нажатия двух кнопок
+    b2.tick(b0, b1);
+
+    // обработка событий
+    if (b0.click()) Serial.println("b0 click");
+    if (b0.step()) Serial.println("b0 step");
+
+    if (b1.click()) Serial.println("b1 click");
+    if (b1.step()) Serial.println("b1 step");
+
+    if (b2.click()) Serial.println("b0+b1 click");
+    if (b2.step()) Serial.println("b0+b1 step");
 }
 ```
 
