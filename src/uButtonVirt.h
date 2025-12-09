@@ -65,7 +65,7 @@ class uButtonVirt {
         return _state == State::Press;
     }
     bool press(uint8_t clicks) {
-        return press() && _clicks == clicks;
+        return _clicks == clicks && press();
     }
 
     // клик по кнопке (отпущена без удержания) [событие]
@@ -73,7 +73,7 @@ class uButtonVirt {
         return _state == State::Click;
     }
     bool click(uint8_t clicks) {
-        return click() && _clicks == clicks;
+        return _clicks == clicks && click();
     }
 
     // кнопка была удержана (больше таймаута) [событие]
@@ -81,7 +81,7 @@ class uButtonVirt {
         return _state == State::Hold;
     }
     bool hold(uint8_t clicks) {
-        return hold() && _clicks == clicks;
+        return _clicks == clicks && hold();
     }
 
     // кнопка отпущена после удержания [событие]
@@ -89,7 +89,7 @@ class uButtonVirt {
         return _state == State::ReleaseHold;
     }
     bool releaseHold(uint8_t clicks) {
-        return releaseHold() && _clicks == clicks;
+        return _clicks == clicks && releaseHold();
     }
 
     // импульсное удержание [событие]
@@ -97,7 +97,7 @@ class uButtonVirt {
         return _state == State::Step;
     }
     bool step(uint8_t clicks) {
-        return step() && _clicks == clicks;
+        return _clicks == clicks && step();
     }
 
     // кнопка отпущена после импульсного удержания [событие]
@@ -105,7 +105,7 @@ class uButtonVirt {
         return _state == State::ReleaseStep;
     }
     bool releaseStep(uint8_t clicks) {
-        return releaseStep() && _clicks == clicks;
+        return _clicks == clicks && releaseStep();
     }
 
     // кнопка отпущена после удержания или импульсного удержания [событие]
@@ -113,7 +113,7 @@ class uButtonVirt {
         return _state == State::ReleaseStep || _state == State::ReleaseHold;
     }
     bool releaseHoldStep(uint8_t clicks) {
-        return releaseHoldStep() && _clicks == clicks;
+        return _clicks == clicks && releaseHoldStep();
     }
 
     // кнопка отпущена (в любом случае) [событие]
@@ -121,7 +121,7 @@ class uButtonVirt {
         return _state == State::Release;
     }
     bool release(uint8_t clicks) {
-        return release() && _clicks == clicks;
+        return _clicks == clicks && release();
     }
 
     // зафиксировано несколько кликов [событие]
@@ -129,7 +129,7 @@ class uButtonVirt {
         return _state == State::Clicks;
     }
     bool hasClicks(uint8_t clicks) {
-        return hasClicks() && _clicks == clicks;
+        return _clicks == clicks && hasClicks();
     }
 
     // вышел таймаут [событие]
@@ -163,7 +163,7 @@ class uButtonVirt {
         }
     }
     bool pressing(uint8_t clicks) {
-        return pressing() && _clicks == clicks;
+        return _clicks == clicks && pressing();
     }
 
     // кнопка удерживается (после hold()) [состояние]
@@ -179,7 +179,7 @@ class uButtonVirt {
         }
     }
     bool holding(uint8_t clicks) {
-        return holding() && _clicks == clicks;
+        return _clicks == clicks && holding();
     }
 
     // кнопка удерживается (после step()) [состояние]
@@ -193,7 +193,7 @@ class uButtonVirt {
         }
     }
     bool stepping(uint8_t clicks) {
-        return stepping() && _clicks == clicks;
+        return _clicks == clicks && stepping();
     }
 
     // кнопка ожидает повторных кликов (между click() и hasClicks()) [состояние]
