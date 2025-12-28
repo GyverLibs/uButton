@@ -46,23 +46,23 @@ class uButtonVirt {
         SkipEvents,    // пропускает события [событие]
     };
 
-    uButtonVirt() : _press(0), _steps(0), _clicks(0), _state(State::Idle) {}
+    uButtonVirt() : _press(0), _steps(0), _clicks(0), _state(static_cast<uint8_t>(State::Idle)) {}
 
     // сбросить состояние (принудительно закончить обработку)
     void reset() {
-        _state = State::Idle;
+        setStateCast(State::Idle);
         _clicks = 0;
         _steps = 0;
     }
 
     // игнорировать все события до отпускания кнопки
     void skipEvents() {
-        if (pressing()) _state = State::SkipEvents;
+        if (pressing()) setStateCast(State::SkipEvents);
     }
 
     // кнопка нажата [событие]
     bool press() {
-        return _state == State::Press;
+        return getStateCast() == State::Press;
     }
     bool press(uint8_t clicks) {
         return _clicks == clicks && press();
@@ -70,7 +70,7 @@ class uButtonVirt {
 
     // клик по кнопке (отпущена без удержания) [событие]
     bool click() {
-        return _state == State::Click;
+        return getStateCast() == State::Click;
     }
     bool click(uint8_t clicks) {
         return _clicks == clicks && click();
@@ -78,7 +78,7 @@ class uButtonVirt {
 
     // кнопка была удержана (больше таймаута) [событие]
     bool hold() {
-        return _state == State::Hold;
+        return getStateCast() == State::Hold;
     }
     bool hold(uint8_t clicks) {
         return _clicks == clicks && hold();
@@ -86,7 +86,7 @@ class uButtonVirt {
 
     // кнопка отпущена после удержания [событие]
     bool releaseHold() {
-        return _state == State::ReleaseHold;
+        return getStateCast() == State::ReleaseHold;
     }
     bool releaseHold(uint8_t clicks) {
         return _clicks == clicks && releaseHold();
@@ -94,7 +94,7 @@ class uButtonVirt {
 
     // импульсное удержание [событие]
     bool step() {
-        return _state == State::Step;
+        return getStateCast() == State::Step;
     }
     bool step(uint8_t clicks) {
         return _clicks == clicks && step();
@@ -102,7 +102,7 @@ class uButtonVirt {
 
     // кнопка отпущена после импульсного удержания [событие]
     bool releaseStep() {
-        return _state == State::ReleaseStep;
+        return getStateCast() == State::ReleaseStep;
     }
     bool releaseStep(uint8_t clicks) {
         return _clicks == clicks && releaseStep();
@@ -110,7 +110,7 @@ class uButtonVirt {
 
     // кнопка отпущена после удержания или импульсного удержания [событие]
     bool releaseHoldStep() {
-        return _state == State::ReleaseStep || _state == State::ReleaseHold;
+        return getStateCast() == State::ReleaseStep || getStateCast() == State::ReleaseHold;
     }
     bool releaseHoldStep(uint8_t clicks) {
         return _clicks == clicks && releaseHoldStep();
@@ -118,7 +118,7 @@ class uButtonVirt {
 
     // кнопка отпущена (в любом случае) [событие]
     bool release() {
-        return _state == State::Release;
+        return getStateCast() == State::Release;
     }
     bool release(uint8_t clicks) {
         return _clicks == clicks && release();
@@ -126,7 +126,7 @@ class uButtonVirt {
 
     // зафиксировано несколько кликов [событие]
     bool hasClicks() {
-        return _state == State::Clicks;
+        return getStateCast() == State::Clicks;
     }
     bool hasClicks(uint8_t clicks) {
         return _clicks == clicks && hasClicks();
@@ -134,13 +134,13 @@ class uButtonVirt {
 
     // вышел таймаут [событие]
     bool timeout() {
-        return _state == State::Timeout;
+        return getStateCast() == State::Timeout;
     }
 
     // вышел таймаут после взаимодействия с кнопкой
     bool timeout(uint16_t ms) {
-        if (_state == State::WaitTimeout && _getTime() >= ms) {
-            _state = State::Timeout;
+        if (getStateCast() == State::WaitTimeout && _getTime() >= ms) {
+            setStateCast(State::Timeout);
             return true;
         }
         return false;
@@ -148,7 +148,7 @@ class uButtonVirt {
 
     // кнопка зажата (между press() и release()) [состояние]
     bool pressing() {
-        switch (_state) {
+        switch (getStateCast()) {
             case State::Press:
             case State::WaitHold:
             case State::Hold:
@@ -168,7 +168,7 @@ class uButtonVirt {
 
     // кнопка удерживается (после hold()) [состояние]
     bool holding() {
-        switch (_state) {
+        switch (getStateCast()) {
             case State::Hold:
             case State::WaitStep:
             case State::Step:
@@ -184,7 +184,7 @@ class uButtonVirt {
 
     // кнопка удерживается (после step()) [состояние]
     bool stepping() {
-        switch (_state) {
+        switch (getStateCast()) {
             case State::Step:
             case State::WaitNextStep:
                 return true;
@@ -198,17 +198,17 @@ class uButtonVirt {
 
     // кнопка ожидает повторных кликов (между click() и hasClicks()) [состояние]
     bool waiting() {
-        return _state == State::WaitClicks;
+        return getStateCast() == State::WaitClicks;
     }
 
     // идёт обработка (между первым нажатием и после ожидания кликов) [состояние]
     bool busy() {
-        return _state != State::Idle;
+        return getStateCast() != State::Idle;
     }
 
     // время, которое кнопка удерживается (с начала нажатия), мс
     uint16_t pressFor() {
-        switch (_state) {
+        switch (getStateCast()) {
             case State::WaitHold:
                 return _getTime();
 
@@ -229,7 +229,7 @@ class uButtonVirt {
 
     // время, которое кнопка удерживается (с начала удержания), мс
     uint16_t holdFor() {
-        switch (_state) {
+        switch (getStateCast()) {
             case State::WaitStep:
                 return _getTime();
 
@@ -249,7 +249,7 @@ class uButtonVirt {
 
     // время, которое кнопка удерживается (с начала степа), мс
     uint16_t stepFor() {
-        switch (_state) {
+        switch (getStateCast()) {
             case State::Step:
             case State::WaitNextStep:
                 return _steps * UB_STEP_PRD + _getTime();
@@ -266,7 +266,7 @@ class uButtonVirt {
 
     // получить текущее состояние
     State getState() {
-        return _state;
+        return getStateCast();
     }
 
     // получить количество кликов
@@ -298,106 +298,120 @@ class uButtonVirt {
 
     // обработка. Вернёт true при смене состояния
     bool pollRaw(bool pressed) {
-        State pstate = _state;
+        State pstate = getStateCast();
 
-        switch (_state) {
+        switch (getStateCast()) {
             case State::Idle:
-                if (pressed) _state = State::Press;
+                if (pressed) setStateCast(State::Press);
                 break;
 
             case State::Press:
-                _state = State::WaitHold;
+                setStateCast(State::WaitHold);
                 _resetTime();
                 break;
 
             case State::WaitHold:
                 if (!pressed) {
-                    _state = State::Click;
+                    setStateCast(State::Click);
                     ++_clicks;
                 } else if (_getTime() >= UB_HOLD_TIME) {
-                    _state = State::Hold;
+                    setStateCast(State::Hold);
                     _resetTime();
                 }
                 break;
 
             case State::Hold:
-                _state = State::WaitStep;
+                setStateCast(State::WaitStep);
                 break;
 
             case State::WaitStep:
-                if (!pressed) _state = State::ReleaseHold;
+                if (!pressed) setStateCast(State::ReleaseHold);
                 else if (_getTime() >= UB_STEP_TIME) {
-                    _state = State::Step;
+                    setStateCast(State::Step);
                     _resetTime();
                 }
                 break;
 
             case State::Step:
-                _state = State::WaitNextStep;
+                setStateCast(State::WaitNextStep);
                 break;
 
             case State::WaitNextStep:
-                if (!pressed) _state = State::ReleaseStep;
+                if (!pressed) setStateCast(State::ReleaseStep);
                 else if (_getTime() >= UB_STEP_PRD) {
-                    _state = State::Step;
+                    setStateCast(State::Step);
                     ++_steps;
                     _resetTime();
                 }
                 break;
 
             case State::SkipEvents:
-                if (!pressed) _state = State::Release;
+                if (!pressed) setStateCast(State::Release);
                 break;
 
             case State::ReleaseHold:
             case State::ReleaseStep:
-                _state = State::Release;
+                setStateCast(State::Release);
                 _clicks = 0;
                 break;
 
             case State::Click:
-                _state = State::Release;
+                setStateCast(State::Release);
                 break;
 
             case State::Release:
                 _steps = 0;
-                _state = _clicks ? State::WaitClicks : State::WaitTimeout;
+                setStateCast(_clicks ? State::WaitClicks : State::WaitTimeout);
                 _resetTime();
                 break;
 
             case State::WaitClicks:
-                if (pressed) _state = State::Press;
+                if (pressed) setStateCast(State::Press);
                 else if (_getTime() >= UB_CLICK_TIME) {
-                    _state = State::Clicks;
+                    setStateCast(State::Clicks);
                     _resetTime();
                 }
                 break;
 
             case State::Clicks:
                 _clicks = 0;
-                _state = State::WaitTimeout;
+                setStateCast(State::WaitTimeout);
                 break;
 
             case State::WaitTimeout:
-                if (pressed) _state = State::Press;
-                // else if (_getTime() >= UB_TOUT_TIME) _state = State::Timeout;
+                if (pressed) setStateCast(State::Press);
+                // else if (_getTime() >= UB_TOUT_TIME) setStateCast(State::Timeout);
                 break;
 
             case State::Timeout:
-                _state = State::Idle;
+                setStateCast(State::Idle);
                 break;
         }
 
-        return pstate != _state;
+        return pstate != getStateCast();
     }
 
    protected:
+    /* Методы-посредники для доступа к защищённой переменной _state.
+     * Обеспечивают двустороннее преобразование между типами State (enum class) и uint8_t.
+     * Введены из-за того, что объявление переменной _state как относящейся к типу State при использовании узких битовых
+     * полей (как `State _state : 4') приводило к предупреждению при компиляции, поскольку GCC требует, чтобы переменная
+     * могла вместить полную переменную типа, к которому "привязан" enum class (в данном случае это uint8_t),
+     * а не только фактически представленные в enum'е значения.
+     */
+    State getStateCast() const {
+        return static_cast<State>(_state);
+    }
+    void setStateCast(State new_state) {
+        _state = static_cast<uint8_t>(new_state);
+    }
+
     void skipToTimeout() {
         _resetTime();
-        _state = State::WaitTimeout;
+        setStateCast(State::WaitTimeout);
     }
     void skipToRelease() {
-        _state = State::SkipEvents;
+        setStateCast(State::SkipEvents);
     }
 
    protected:
@@ -406,7 +420,7 @@ class uButtonVirt {
     uint8_t _press : 1;
     uint8_t _steps : 7;
     uint8_t _clicks : 4;
-    State _state : 4;
+    uint8_t _state : 4;
 
     uint16_t _getTime() {
         return uint16_t(millis()) - _tmr;
