@@ -7,7 +7,7 @@
 [![Foo](https://img.shields.io/badge/ПОДПИСАТЬСЯ-НА%20ОБНОВЛЕНИЯ-brightgreen.svg?style=social&logo=telegram&color=blue)](https://t.me/GyverLibs)
 
 # uButton
-Очередной класс кнопки для Arduino.
+Ещё одна библиотека кнопки для Arduino. Используется для "ещё одной" библиотеки энкодера [uEncoder](https://github.com/GyverLibs/uEncoder).
 
 По API это на 99% аналог [EncButton](https://github.com/GyverLibs/EncButton), но чуточку легче (6 байт RAM на кнопку и ~650 байт флешки) и написан в более читаемом конечно-автоматном стиле, а не на флагах.
 
