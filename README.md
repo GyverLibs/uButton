@@ -38,12 +38,19 @@
 Объявлять до подключения библиотеки
 
 ```cpp
-#define UB_DEB_TIME 50      // дебаунс
+#define UB_DEB_TIME 50      // дебаунс (до 255)
 #define UB_HOLD_TIME 600    // время до перехода в состояние "удержание"
 #define UB_STEP_TIME 400    // время до перехода в состояние "импульсное удержание"
 #define UB_STEP_PRD 200     // период импульсов
 #define UB_CLICK_TIME 500   // ожидание кликов
 ```
+
+### Ограничения
+- Таймеры состояний for: до 65 секунд
+- Debounce: до 255 мс
+- Clicks: до 15
+- Steps: до 127
+- Логика физической кнопки: active low (открытый коллектор)
 
 ### Классы
 #### uButtonVirt
@@ -113,6 +120,7 @@ bool hasClicks();
 bool hasClicks(uint8_t clicks);
 
 // вышел таймаут после взаимодействия [событие]
+// вызывать вне if (tick())
 bool timeout(uint16_t ms);
 
 // =============== СОСТОЯНИЯ ===============
@@ -168,15 +176,15 @@ uint8_t getSteps();
 // вызвать, когда кнопка нажата в прерывании
 void pressISR();
 
-// обработка с антидребезгом. Вернёт true при смене состояния
+// обработка с антидребезгом, кнопка нажата - pressed true. Вернёт true при смене состояния
 bool poll(bool pressed);
 
-// обработка. Вернёт true при смене состояния
+// обработка, кнопка нажата - pressed true. Вернёт true при смене состояния
 bool pollRaw(bool pressed);
 ```
 
 #### uButton
-Класс `uButton` наследует `uButtonVirt`, автоматически инициализируя пин и отправляя данные с него в `poll` внутри `tick`.
+Класс `uButton` наследует `uButtonVirt`, автоматически инициализируя пин и отправляя данные с него в `poll` внутри `tick`. Сигнал кнопки активный низкий, т.е. при нажатии кнопка даёт LOW.
 
 ```cpp
 // кнопка подключается на GND (open drain)
@@ -221,12 +229,13 @@ void loop() {
         if (b.releaseStep()) Serial.println("releaseStep");
         if (b.release()) Serial.println("Release");
         if (b.hasClicks()) Serial.print("Clicks: "), Serial.println(b.getClicks());
-        if (b.timeout(2000)) Serial.println("Timeout");
 
         switch (b.getState()) {
             // ...
         }
     }
+
+    if (b.timeout(2000)) Serial.println("Timeout");
 }
 ```
 

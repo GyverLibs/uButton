@@ -313,7 +313,7 @@ class uButtonVirt {
             case State::WaitHold:
                 if (!pressed) {
                     _state = State::Click;
-                    ++_clicks;
+                    if (_clicks < _UB_MAX_CLICKS) ++_clicks;
                 } else if (_getTime() >= UB_HOLD_TIME) {
                     _state = State::Hold;
                     _resetTime();
@@ -340,7 +340,7 @@ class uButtonVirt {
                 if (!pressed) _state = State::ReleaseStep;
                 else if (_getTime() >= UB_STEP_PRD) {
                     _state = State::Step;
-                    ++_steps;
+                    if (_steps < _UB_MAX_STEPS) ++_steps;
                     _resetTime();
                 }
                 break;
@@ -401,6 +401,9 @@ class uButtonVirt {
     }
 
    protected:
+    static const uint8_t _UB_MAX_CLICKS = 15;
+    static const uint8_t _UB_MAX_STEPS = 127;
+
     uint16_t _tmr = 0;
     uint8_t _deb = 0;
 

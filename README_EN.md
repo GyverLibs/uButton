@@ -223,12 +223,13 @@ void loop() {
         if (b.releaseStep()) Serial.println("releaseStep");
         if (b.release()) Serial.println("Release");
         if (b.hasClicks()) Serial.print("Clicks: "), Serial.println(b.getClicks());
-        if (b.timeout(2000)) Serial.println("Timeout");
 
         switch (b.getState()) {
             // ...
         }
     }
+    
+    if (b.timeout(2000)) Serial.println("Timeout");
 }
 ```
 

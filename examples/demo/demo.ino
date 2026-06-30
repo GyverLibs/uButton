@@ -26,6 +26,7 @@ void loop() {
         if (b.releaseStep()) Serial.println("releaseStep");
         if (b.release()) Serial.println("Release");
         if (b.hasClicks()) Serial.print("Clicks: "), Serial.println(b.getClicks());
-        if (b.timeout(2000)) Serial.println("Timeout");
     }
+
+    if (b.timeout(2000)) Serial.println("Timeout");
 }
